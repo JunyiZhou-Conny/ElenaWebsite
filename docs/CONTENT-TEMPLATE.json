@@ -1,0 +1,25 @@
+{
+  "instructions": "Templates only. Ask Codex to fill verified facts and copy the completed entry into the relevant array in content/site.json. This file is not published.",
+  "companyProject": {
+    "id": "replace-with-project-slug",
+    "title": "",
+    "chineseTitle": "",
+    "year": "",
+    "format": "",
+    "status": "",
+    "duration": "",
+    "creditOwner": "Describe LELE Films' actual role",
+    "summary": "",
+    "image": "filename-in-public-images.jpg",
+    "imageAlt": "Describe what the image actually shows",
+    "poster": "",
+    "credits": [{"role": "", "name": ""}],
+    "sourceUrl": "",
+    "moreUrl": "",
+    "videoUrl": "",
+    "videoEmbed": "",
+    "recognition": ""
+  },
+  "teamMember": {"name":"", "role":"", "bio":"", "image":""},
+  "service": {"title":"", "description":""}
+}

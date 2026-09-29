@@ -1,0 +1,108 @@
+{
+  "brand": "LELE Films",
+  "domain": "lelefilms.com",
+  "company": {
+    "intro": "An independent film company taking shape around a simple idea: look closer, listen longer.",
+    "description": "LELE Films begins with the documentary practice of Elena Lecun Xiang. A space for films rooted in real lives, and for the people who make them together.",
+    "tagline": "Real lives. Lasting stories.",
+    "email": "",
+    "instagram": "",
+    "team": [],
+    "services": [],
+    "companyProjects": []
+  },
+  "founder": {
+    "name": "Elena Lecun Xiang",
+    "role": "Filmmaker · Cinematographer · Editor",
+    "location": "New York City",
+    "bio": "Elena Lecun Xiang is a Chinese documentary filmmaker, cinematographer and editor based in New York City. A graduate of NYU’s News & Documentary Program, her work explores migration, belonging and motherhood.",
+    "portrait": "elena-xiang.jpg",
+    "archiveUrl": "https://elenafilmarchive.wordpress.com/",
+    "aboutUrl": "https://elenafilmarchive.wordpress.com/elena-film-archive/"
+  },
+  "projects": [
+    {
+      "id": "goodbye-yiwu",
+      "title": "Goodbye, Yiwu",
+      "chineseTitle": "再见，义乌",
+      "year": "2026",
+      "format": "Feature documentary",
+      "status": "Work in progress",
+      "duration": "",
+      "creditOwner": "Elena’s personal work",
+      "summary": "Returning to Yiwu, Elena follows a Pakistani boy and his working mother, reflecting on migration, motherhood and her own childhood.",
+      "image": "goodbye-yiwu-still.png",
+      "imageAlt": "Artificial Christmas trees fill a wholesale-market stall in a still from Goodbye, Yiwu.",
+      "poster": "goodbye-yiwu-poster.png",
+      "credits": [
+        {
+          "role": "Director, producer, cinematographer & editor",
+          "name": "Elena Lecun Xiang"
+        }
+      ],
+      "sourceUrl": "https://elenafilmarchive.wordpress.com/videos/",
+      "moreUrl": "https://www.firstfilm.org.cn/movies/documentary-lab/%E5%86%8D%E8%A7%81%E4%B9%89%E4%B9%8C/",
+      "videoUrl": "",
+      "videoEmbed": "",
+      "recognition": "AIDC–CCDF Award, 2026"
+    },
+    {
+      "id": "the-acupuncturist",
+      "title": "The Acupuncturist",
+      "chineseTitle": "针灸师",
+      "year": "2025",
+      "format": "Short documentary",
+      "status": "Completed",
+      "duration": "6 min",
+      "creditOwner": "Elena’s personal work",
+      "summary": "A Brooklyn acupuncturist cares for immigrant communities while campaigning for wider access to treatment.",
+      "image": "acupuncturist-still.jpg",
+      "imageAlt": "Gloved hands administer acupuncture in a still from The Acupuncturist.",
+      "poster": "acupuncturist-poster.jpg",
+      "credits": [
+        {
+          "role": "Director, cinematographer & editor",
+          "name": "Elena Lecun Xiang"
+        },
+        {
+          "role": "Producer",
+          "name": "Jason Samuels"
+        },
+        {
+          "role": "Music",
+          "name": "YongTan"
+        }
+      ],
+      "sourceUrl": "https://elenafilmarchive.wordpress.com/videos/",
+      "moreUrl": "https://www.amny.com/lifestyle/health/brooklyn-acupuncturist-insurance-reform-aid-immigrant-workers/",
+      "videoUrl": "https://vimeo.com/1084717437/f3b9d4ba35",
+      "videoEmbed": "https://player.vimeo.com/video/1084717437?h=f3b9d4ba35",
+      "recognition": "Published by amNewYork, 2025"
+    }
+  ],
+  "writing": [
+    {
+      "title": "Yangzi’s Confusion",
+      "type": "Film review",
+      "year": "2024",
+      "url": "https://blog.uclfilm.com/2024/02/18/yangzis-confusion-review/"
+    },
+    {
+      "title": "La Cocina",
+      "type": "Film review",
+      "year": "2024",
+      "url": "https://blog.uclfilm.com/2024/04/09/la-cocina-review/"
+    },
+    {
+      "title": "May December",
+      "type": "Cannes review",
+      "year": "2023",
+      "url": "https://blog.uclfilm.com/2023/07/16/cannes-2023-may-december-review/"
+    }
+  ],
+  "settings": {
+    "showDesignSwitcher": true,
+    "searchIndexing": false,
+    "heroProjectId": "goodbye-yiwu"
+  }
+}

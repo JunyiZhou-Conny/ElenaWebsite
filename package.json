@@ -1,0 +1,9 @@
+{
+  "name": "lele-films",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Two editable design directions for LELE Films",
+  "type": "module",
+  "scripts": { "dev": "node scripts/serve.mjs", "build": "node scripts/build.mjs", "check": "node scripts/check.mjs" },
+  "engines": { "node": ">=20" }
+}
