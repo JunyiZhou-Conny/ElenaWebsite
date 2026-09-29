@@ -9,8 +9,8 @@
 | 比较入口 | `/` | 一次打开两个方向 |
 
 在线预览：
-- https://lele-films-designs.vocal-wood-9470.chatgpt.site/quiet/
-- https://lele-films-designs.vocal-wood-9470.chatgpt.site/studio/
+- https://lele-films-designs.carissa-conny.chatgpt.site/quiet/
+- https://lele-films-designs.carissa-conny.chatgpt.site/studio/
 
 这两个地址是设计预览，**不是已绑定的 lelefilms.com**。正式域名尚未改动。设计预览默认禁止搜索引擎索引。
 
