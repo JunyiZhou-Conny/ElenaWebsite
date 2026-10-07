@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile, access } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
 import { elenaPages } from '../src/elena.mjs';
-import { motionPages } from '../src/motion.mjs';
+import { motionPages, sitePages, siteOrigin } from '../src/motion.mjs';
 import { fileURLToPath } from 'node:url';
 const root=fileURLToPath(new URL('../',import.meta.url));
 const d=JSON.parse(await readFile(resolve(root,'content/site.json'),'utf8'));
@@ -48,3 +48,24 @@ url(elena.contact.instagram);
 const css=await readFile(resolve(root,'dist/elena/elena.css'),'utf8');
 for(const [,file] of css.matchAll(/url\(['"]([^'"]+)['"]\)/g)) await access(resolve(root,'dist/elena',file));
 console.log('Checked Elena’s content, responsive stills and self-hosted font files.');
+
+// The public website (site/): complete, open to search engines, addressed as lelefilms.com, and free of design-study links.
+for(const page of sitePages){
+ const filename=resolve(root,'site',page,'index.html'),html=await readFile(filename,'utf8');
+ assert(html.includes('<h1'),'Page needs a heading: site/'+page);
+ assert(!/undefined|\[object Object\]/.test(html),'Missing content in site/'+page);
+ assert(!/noindex/.test(html),'The public site must not be hidden from search engines: site/'+page);
+ assert(html.includes(`<link rel="canonical" href="${siteOrigin}${page}">`),'Missing canonical address in site/'+page);
+ assert(!/href="[^"]*\b(elena|quiet|studio|motion)\/"/.test(html),'The public site must not link to the design studies: site/'+page);
+ const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);
+ assert(new Set(ids).size===ids.length,'Duplicate HTML ids in site/'+page);
+ for(const [,target] of html.matchAll(/(?:href|src)="([^"]+)"/g)){
+  if(/^(https?:|mailto:|data:)/.test(target))continue;
+  if(target.startsWith('#'))assert(ids.includes(target.slice(1)),'Broken anchor '+target+' in site/'+page);
+  else await access(resolve(dirname(filename),target.replace(/\/$/,'/index.html')));
+ }
+}
+for(const file of ['404.html','robots.txt','sitemap.xml'])await access(resolve(root,'site',file));
+const siteCss=await readFile(resolve(root,'site/elena/elena.css'),'utf8');
+for(const [,file] of siteCss.matchAll(/url\(['"]([^'"]+)['"]\)/g)) await access(resolve(root,'site/elena',file));
+console.log(`Checked the public website: ${sitePages.length} pages for ${siteOrigin}, open to search engines, no design-study links.`);

@@ -16,7 +16,9 @@
 - https://lele-films-designs.carissa-conny.chatgpt.site/quiet/
 - https://lele-films-designs.carissa-conny.chatgpt.site/studio/
 
-这些地址是设计预览，**不是已绑定的 lelefilms.com**。正式域名尚未改动。设计预览默认禁止搜索引擎索引。
+这些地址是设计预览，**不是已绑定的 lelefilms.com**。设计预览默认禁止搜索引擎索引。
+
+正式网站选用第四版：`npm run build` 另外生成 `site/`（第四版放在网站根目录，可被搜索引擎收录，不含设计比较链接），合并到 `main` 后由 GitHub Actions 发布到 GitHub Pages。连接 lelefilms.com 的步骤、Elena 需要提供的信息和 DNS 记录见 `docs/LAUNCH-LELEFILMS.md`。
 
 ## 在自己的电脑上打开
 
@@ -45,7 +47,9 @@ npm run dev
 | `src/templates.mjs` | 两套页面的结构 |
 | `src/site.css` | 两套视觉样式和手机适配 |
 | `src/site.js` | 作品弹窗、Vimeo 播放、开场图运动开关 |
-| `dist/` | 自动生成、可以直接托管的完整静态网站；不要在这里手工修改 |
+| `dist/` | 自动生成的设计预览（四个版本）；不要在这里手工修改 |
+| `site/` | 自动生成的正式网站（第四版，供 lelefilms.com 使用）；不要在这里手工修改 |
+| `.github/workflows/publish-site.yml` | `main` 有更新时自动发布 `site/` 到 GitHub Pages |
 | `docs/ELENA-GUIDE.zh-CN.md` | Elena 用自然语言维护网站的说明 |
 | `docs/SOURCES.md` | 内容和素材来源、哪些是已验证事实 |
 | `docs/CONTENT-TEMPLATE.json` | 添加项目和团队成员时使用的空模板 |

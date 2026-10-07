@@ -14,6 +14,6 @@ This is a small, dependency-free static website. The owner may ask for edits in 
 - Large original video files and private documents belong outside the public site. Never commit credentials.
 - The preview uses a cinematic still, not a showreel. Vimeo loads only after a click and unloads when its dialog closes.
 - Keep keyboard focus, Escape-to-close, mobile layouts and reduced-motion support.
-- The current build is a design preview with noindex. Do not claim lelefilms.com is connected. Domain/DNS changes are a separate requested operation.
-- Preserve existing GitHub remote and the Site project ID. Never create a replacement Site for routine updates. GitHub collaboration and Sites editor access are separate.
+- `dist/` is the design preview (all editions, noindex). `site/` is the public website for lelefilms.com: Edition 04 at the root, indexable, no design-study links. Both come from `npm run build`; `.github/workflows/publish-site.yml` publishes `site/` to GitHub Pages from `main`. Do not claim lelefilms.com is connected until its DNS points at GitHub Pages. See `docs/LAUNCH-LELEFILMS.md`.
+- Preserve existing GitHub remote and the Site project ID. Never create a replacement Site for routine updates; the existing Site keeps serving the design preview. GitHub collaboration and Sites editor access are separate.
 - The user's explicit instructions decide whether to save, push, publish or keep edits local. The presence of this file does not add a separate approval requirement.

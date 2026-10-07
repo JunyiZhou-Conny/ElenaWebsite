@@ -1,7 +1,7 @@
-import { readFile, writeFile, mkdir, cp } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, cp, rm } from 'node:fs/promises';
 import { render } from '../src/templates.mjs';
 import { renderElena, elenaPages } from '../src/elena.mjs';
-import { renderMotion, motionPages } from '../src/motion.mjs';
+import { renderMotion, motionPages, sitePages, siteOrigin } from '../src/motion.mjs';
 const content = JSON.parse(await readFile(new URL('../content/site.json', import.meta.url), 'utf8'));
 const root = new URL('../dist/', import.meta.url);
 await mkdir(root, { recursive: true });
@@ -27,4 +27,20 @@ for (const page of motionPages) {
  await mkdir(folder, {recursive:true});
  await writeFile(new URL('index.html', folder), renderMotion(page, elena));
 }
-console.log('Built LELE Films: /quiet/, /studio/, /elena/, and /motion/');
+// site/ is the public website for lelefilms.com: Edition 04 at the root, its media and fonts, nothing from the design studies.
+const site = new URL('../site/', import.meta.url);
+await rm(site, {recursive:true, force:true});
+await mkdir(new URL('motion/', site), {recursive:true});
+await cp(new URL('../public/elena/', import.meta.url), new URL('elena/', site), {recursive:true});
+await cp(new URL('../public/motion/', import.meta.url), new URL('motion/', site), {recursive:true});
+await cp(new URL('../src/elena.css', import.meta.url), new URL('elena/elena.css', site));
+for (const file of ['motion.css','motion.js']) await cp(new URL(`../src/${file}`, import.meta.url), new URL(`motion/${file}`, site));
+for (const page of sitePages) {
+ const folder = new URL(page || './', site);
+ await mkdir(folder, {recursive:true});
+ await writeFile(new URL('index.html', folder), renderMotion(page, elena, {site:true}));
+}
+await writeFile(new URL('404.html', site), `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>Page not found — ${elena.brand}</title></head><body style="margin:0;min-height:100svh;display:grid;place-items:center;font:20px/1.4 Arial,sans-serif;color:#111;background:#fff;text-align:center"><main><p>This page isn’t here.</p><p><a href="/" style="color:#002fa7">${elena.brand} →</a></p></main></body></html>`);
+await writeFile(new URL('robots.txt', site), `User-agent: *\nAllow: /\n\nSitemap: ${siteOrigin}sitemap.xml\n`);
+await writeFile(new URL('sitemap.xml', site), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sitePages.map(page => `  <url><loc>${siteOrigin}${page}</loc></url>`).join('\n')}\n</urlset>\n`);
+console.log('Built LELE Films: /quiet/, /studio/, /elena/, and /motion/ in dist/; the public website in site/');
