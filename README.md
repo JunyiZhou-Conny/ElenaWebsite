@@ -7,7 +7,7 @@
 | 01 · Quiet Cinema | `/quiet/` | Tail Bite Tail 的电影档案感 + Oui 的留白：暖黑底、衬线字体、双语导航、剧照 |
 | 02 · The Studio | `/studio/` | Denizen 的黑白开场、粗体文字、通栏作品和亮蓝色区块 |
 | 03 · Elena’s Design | `/elena/` | Elena 的 Canva 原稿：白底、橙蓝 logo、四个独立页面 |
-| 04 · LeLe in Motion | `/motion/` | 保留 Elena 的品牌与文案，加入轻柔磁吸、作品预览、贴纸与可拖动剧照 |
+| 04 · LeLe in Motion | `/motion/` | 保留 Elena 的品牌与文案，加入轻柔磁吸、剧照为主角的作品行、贴纸与可拖动剧照 |
 | 比较入口 | `/` | 四个方向的入口 |
 
 在线预览：
