@@ -5,21 +5,23 @@ const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 // One timing family, defined once in motion.css (--motion-settle, --motion-layout, --ease-out), shared with the CSS transitions.
 const tokens = getComputedStyle(root);
-const SETTLE = parseFloat(tokens.getPropertyValue('--motion-settle')) || 320;
-const LAYOUT = parseFloat(tokens.getPropertyValue('--motion-layout')) || 420;
+const ms = (name, fallback) => { const value = tokens.getPropertyValue(name).trim(), n = parseFloat(value); return !Number.isFinite(n) ? fallback : /ms$/.test(value) || !/s$/.test(value) ? n : n * 1000; };
+const SETTLE = ms('--motion-settle', 320), LAYOUT = ms('--motion-layout', 420);
 const EASE = tokens.getPropertyValue('--ease-out').trim() || 'cubic-bezier(.22,1,.36,1)';
 const animated = () => !reducedMotion.matches;
 const cleanup = new Set();
 addEventListener('blur', () => cleanup.forEach(fn => fn()));
 document.addEventListener('visibilitychange', () => { if (document.hidden) cleanup.forEach(fn => fn()); });
-reducedMotion.addEventListener('change', () => cleanup.forEach(fn => fn()));
+reducedMotion.addEventListener('change', () => { cleanup.forEach(fn => fn()); if (reducedMotion.matches) document.getAnimations().forEach(animation => animation.finish()); });
+// iOS Safari only shows :active pressed states when the page listens for touches.
+document.addEventListener('touchstart', () => {}, {passive: true});
 
 // Warm a page while the visitor points at its link, so it is ready when they click.
 if (!navigator.connection?.saveData && !/2g/.test(navigator.connection?.effectiveType || '')) {
   const prepared = new Set([location.href]);
   const prepare = event => {
     const anchor = event.target.closest?.('a[href]');
-    if (!anchor || anchor.target || anchor.origin !== location.origin || prepared.has(anchor.href)) return;
+    if (!anchor || anchor.target || anchor.hasAttribute('data-photo') || anchor.origin !== location.origin || anchor.pathname === location.pathname || prepared.has(anchor.href)) return;
     prepared.add(anchor.href);
     document.head.append(Object.assign(document.createElement('link'), {rel: 'prefetch', href: anchor.href}));
   };
@@ -58,40 +60,44 @@ if (still && !still.complete) {
 // Dragging. A held object follows the pointer exactly; easing is only for objects nobody is holding.
 // `handle` always picks the object up. With `surface`, a mouse or pen can also pick it up anywhere,
 // while touch keeps to the handle so a swipe over a photo still scrolls the page.
-function movable(element, {handle = element, stack, limits, enabled = () => true, surface = false, onPickup, onDrop, onChange}) {
-  let x = 0, y = 0, shown = [0, 0], drag = null, flight = null, settling = 0, swallowClick = false;
+function movable(element, {handle = element, stack, limits, measure = () => element.getBoundingClientRect(), enabled = () => true, surface = false, onPickup, onDrop, onChange, onKeyIdle}) {
+  let x = 0, y = 0, shown = [0, 0], drag = null, flight = null, settling = 0, idle = 0, swallowClick = false;
   const status = element.closest('section, main').querySelector('[data-drag-status]');
   const announce = message => { if (status) status.textContent = message; };
   const draw = () => { shown = [x, y]; element.style.setProperty('--x', `${x}px`); element.style.setProperty('--y', `${y}px`); };
   const raise = () => { element.style.zIndex = ++stack.z; };
   const fly = (frames, options) => { flight?.cancel(); flight = element.animate(frames, options); return flight; };
-  // Stop a flight at its end state (used before layout changes; offsets already hold the destination).
+  const flying = () => flight && flight.playState !== 'finished';
+  // Jump a flight to its end state (used before layout changes; the offsets already hold the destination).
   const stop = () => { flight?.cancel(); flight = null; finish(); };
   // Keep a flight where it currently is, so grabbing a moving object never makes it jump.
   const land = () => {
-    if (!flight || flight.playState === 'finished') return;
+    if (!flying()) return;
     const now = new DOMMatrix(getComputedStyle(element).transform);
     flight.cancel(); flight = null; x = now.e; y = now.f; draw();
   };
   const bound = () => {
     if (!enabled()) return false;
     // The box on screen still shows the last drawn offset; measure the edges from there.
-    const box = element.getBoundingClientRect(), area = limits();
+    const box = measure(), area = limits();
     const nx = clamp(x, shown[0] + area.left - box.left, shown[0] + area.right - box.right);
     const ny = clamp(y, shown[1] + area.top - box.top, shown[1] + area.bottom - box.bottom);
     const changed = nx !== x || ny !== y;
     x = nx; y = ny; draw();
     return changed;
   };
+  // Glide from whatever is on screen now, including a flight in progress, so nothing snaps first.
   const glideTo = (nx, ny) => {
-    land();
     const from = getComputedStyle(element).transform;
+    flight?.cancel(); flight = null;
     x = nx; y = ny; draw();
     const to = getComputedStyle(element).transform;
     if (animated() && from !== to) fly([{transform: from}, {transform: to}], {duration: SETTLE, easing: EASE});
   };
-  const settle = () => {
+  const nudge = (dx, dy, smooth = true) => { if (smooth) return glideTo(x + dx, y + dy); x += dx; y += dy; draw(); };
+  const settle = touch => {
     element.classList.add('is-settling');
+    element.dataset.settling = touch ? 'touch' : 'pointer';
     clearTimeout(settling);
     settling = setTimeout(() => element.classList.remove('is-settling'), SETTLE * 2);
   };
@@ -100,8 +106,9 @@ function movable(element, {handle = element, stack, limits, enabled = () => true
     if (!enabled() || event.button !== 0 || !event.isPrimary) return;
     const onHandle = handle.contains(event.target);
     if (!onHandle && !(surface && event.pointerType !== 'touch')) return;
-    land(); raise();
-    drag = {id: event.pointerId, startX: event.clientX, startY: event.clientY, x, y, moved: false, threshold: event.pointerType === 'touch' ? 10 : 6};
+    raise();
+    clearTimeout(settling); element.classList.remove('is-settling');
+    drag = {id: event.pointerId, startX: event.clientX, startY: event.clientY, lastX: event.clientX, lastY: event.clientY, x, y, slipX: 0, slipY: 0, moved: false, touch: event.pointerType === 'touch', threshold: event.pointerType === 'touch' ? 10 : 6};
     element.classList.add('is-held');
     onPickup?.();
     // A handle owns the gesture at once. Elsewhere, wait for real movement so an ordinary click still opens the photo.
@@ -110,52 +117,67 @@ function movable(element, {handle = element, stack, limits, enabled = () => true
     addEventListener('pointerup', finish);
     addEventListener('pointercancel', finish);
   };
+  // Past an edge the object waits, then answers the moment the pointer turns back,
+  // moving at half speed until the hand is over the spot it grabbed again.
+  const ease = (slip, step) => slip && Math.sign(step) === Math.sign(slip) ? Math.sign(slip) * Math.max(0, Math.abs(slip) - Math.abs(step) / 2) : slip;
   const track = event => {
     if (!drag || event.pointerId !== drag.id) return;
     if (!enabled()) return finish();
     const dx = event.clientX - drag.startX, dy = event.clientY - drag.startY;
+    const stepX = event.clientX - drag.lastX, stepY = event.clientY - drag.lastY;
+    drag.lastX = event.clientX; drag.lastY = event.clientY;
     if (!drag.moved) {
       if (Math.hypot(dx, dy) < drag.threshold) return;
       drag.moved = true;
       element.classList.add('is-dragging');
       if (!element.hasPointerCapture(drag.id)) element.setPointerCapture(drag.id);
+      // Only a real drag interrupts a glide; a press on a moving object lets it finish.
+      if (flying()) { land(); drag.x = x - dx; drag.y = y - dy; }
     }
-    x = drag.x + dx; y = drag.y + dy;
-    // At an edge, re-base the grip so the object responds the moment the pointer turns back.
-    if (bound()) { drag.x = x - dx; drag.y = y - dy; }
+    drag.slipX = ease(drag.slipX, stepX); drag.slipY = ease(drag.slipY, stepY);
+    const idealX = drag.x + dx, idealY = drag.y + dy;
+    x = idealX + drag.slipX; y = idealY + drag.slipY;
+    bound();
+    drag.slipX = x - idealX; drag.slipY = y - idealY;
   };
   function finish(event) {
     if (!drag || (event?.pointerId !== undefined && event.pointerId !== drag.id)) return;
-    const {id, moved} = drag;
+    const {id, moved, touch} = drag;
     drag = null;
     removeEventListener('pointermove', track);
     removeEventListener('pointerup', finish);
     removeEventListener('pointercancel', finish);
     if (element.hasPointerCapture(id)) element.releasePointerCapture(id);
     element.classList.remove('is-held', 'is-dragging');
-    if (!moved) return onDrop?.(false);
+    if (!moved) { onChange?.(); return onDrop?.(false); }
     swallowClick = true;
-    settle();
+    settle(touch);
     const spot = onDrop?.(true);
-    if (spot) glideTo(x + spot[0], y + spot[1]);
-    announce('Moved. Press Escape while it is focused to put it back.');
+    if (spot) nudge(...spot);
+    announce('Moved. Press Escape to put it back.');
     onChange?.();
   }
   const reset = () => {
-    stop();
+    if (drag) finish();
     if (x || y) glideTo(0, 0);
     element.style.zIndex = '';
   };
   element.addEventListener('pointerdown', begin);
   element.addEventListener('lostpointercapture', event => { if (drag?.moved) finish(event); });
-  element.addEventListener('pointerleave', () => { if (!drag) element.classList.remove('is-settling'); });
+  element.addEventListener('pointerleave', () => { if (!drag && element.dataset.settling !== 'touch') element.classList.remove('is-settling'); });
   element.addEventListener('pointermove', () => { if (!drag && element.matches(':hover')) element.classList.remove('is-settling'); });
   // After a drag the pointer is released over the object; that release must not also count as a click.
   element.addEventListener('click', event => { if (swallowClick) { event.preventDefault(); event.stopPropagation(); } swallowClick = false; }, true);
   element.addEventListener('focusin', raise);
+  // Escape works wherever focus sits inside the object, including a photo just dragged with the mouse.
+  element.addEventListener('keydown', event => {
+    if (event.key !== 'Escape' || !enabled() || !(x || y)) return;
+    event.preventDefault(); clearTimeout(idle); reset(); announce('Put back.'); onChange?.();
+  });
+  const settleKeys = () => { if (!idle) return; clearTimeout(idle); idle = 0; onKeyIdle?.(); };
   handle.addEventListener('keydown', event => {
     if (!enabled()) return;
-    if (event.key === 'Escape' && (x || y)) { event.preventDefault(); reset(); announce('Put back.'); onChange?.(); return; }
+    if (event.key === ' ' || event.key === 'Enter') { event.preventDefault(); return announce('Use the arrow keys to move it. Shift moves further. Escape puts it back.'); }
     const delta = {ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[event.key];
     if (!delta) return;
     event.preventDefault(); land(); raise();
@@ -164,9 +186,11 @@ function movable(element, {handle = element, stack, limits, enabled = () => true
     if (Math.abs(x - before[0]) + Math.abs(y - before[1]) < .5) return announce('It cannot go further that way.');
     announce('Moved. Press Escape to put it back.');
     onChange?.();
+    clearTimeout(idle); idle = setTimeout(settleKeys, 600);
   });
+  handle.addEventListener('focusout', settleKeys);
   cleanup.add(() => finish());
-  return {reset, bound, glideTo, stop, land, fly, moved: () => Boolean(x || y)};
+  return {reset, bound, glideTo, nudge, stop, land, fly, flying, moved: () => Boolean(x || y)};
 }
 
 // Home stickers: three small objects from the film. They roam the page, but never come to rest on the words.
@@ -175,40 +199,72 @@ if (stickerStage) {
   const main = stickerStage.closest('main');
   const stickers = [...stickerStage.querySelectorAll('[data-drag]')];
   const hint = document.querySelector('.drag-hint'), putBack = document.querySelector('[data-reset-stickers]');
+  const status = main.querySelector('[data-drag-status]');
   const stack = {z: 0}, gutter = 16;
   const limits = () => { const m = main.getBoundingClientRect(); return {left: gutter, right: root.clientWidth - gutter, top: m.top + gutter, bottom: m.bottom - gutter}; };
-  const zones = () => [...main.querySelectorAll('.navigation-home > a, .company-intro > span, .home-note > *:not([hidden])')].flatMap(el => [...el.getClientRects()]);
+  const grow = (r, n) => new DOMRect(r.left - n, r.top - n, r.width + n * 2, r.height + n * 2);
+  // The words themselves, line by line, not the boxes around them.
+  const textRects = element => {
+    const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT), rects = [];
+    for (let node; (node = walker.nextNode());) {
+      if (!node.textContent.trim()) continue;
+      const range = document.createRange(); range.selectNodeContents(node);
+      rects.push(...range.getClientRects());
+    }
+    return rects;
+  };
+  const zones = () => [
+    ...[...main.querySelectorAll('.navigation-home > a, .navigation-home > .line')].map(el => el.getBoundingClientRect()),
+    ...[...main.querySelectorAll('.company-intro, .home-note')].flatMap(textRects)
+  ].filter(r => r.width && r.height).map(r => grow(r, 6));
   const overlap = (a, b) => Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left)) * Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
   // The drawn object fills roughly the middle 70% of each square sticker image.
   const artwork = sticker => { const box = sticker.getBoundingClientRect(), size = sticker.offsetWidth * .7; return new DOMRect(box.left + box.width / 2 - size / 2, box.top + box.height / 2 - size / 2, size, size); };
   const clearSpot = sticker => {
     const art = artwork(sticker), area = art.width * art.height, words = zones(), page = limits();
-    const blocked = (dx, dy) => { const r = new DOMRect(art.x + dx, art.y + dy, art.width, art.height); return r.left < page.left || r.right > page.right || r.top < page.top || r.bottom > page.bottom || words.some(zone => overlap(r, zone) > area * .04); };
-    if (!blocked(0, 0)) return null;
-    for (let distance = 12; distance < 900; distance += 12) for (let step = 0; step < 24; step++) {
+    const others = stickers.filter(other => other !== sticker).map(artwork);
+    const blocked = (dx, dy, allowance) => {
+      const r = new DOMRect(art.x + dx, art.y + dy, art.width, art.height);
+      return r.left < page.left || r.right > page.right || r.top < page.top || r.bottom > page.bottom
+        || words.some(zone => overlap(r, zone) > area * allowance) || others.some(other => overlap(r, other) > area * .15);
+    };
+    if (!blocked(0, 0, 0)) return null;
+    for (const allowance of [0, .01]) for (let distance = 8; distance < 900; distance += 8) for (let step = 0; step < 24; step++) {
       const angle = step / 24 * Math.PI * 2, dx = Math.cos(angle) * distance, dy = Math.sin(angle) * distance;
-      if (!blocked(dx, dy)) return [dx, dy];
+      if (!blocked(dx, dy, allowance)) return [dx, dy];
     }
     return null;
   };
+  // While held or gliding, stickers travel above the navigation; at rest they sit below it.
   let lowering = 0;
   const hold = () => { clearTimeout(lowering); stickerStage.classList.add('is-holding'); };
-  const lower = () => { clearTimeout(lowering); lowering = setTimeout(() => stickerStage.classList.remove('is-holding'), SETTLE); };
+  const lower = (delay = SETTLE) => { clearTimeout(lowering); lowering = setTimeout(() => stickerStage.classList.remove('is-holding'), delay); };
   const sync = () => { const moved = controllers.some(c => c.moved()); hint.hidden = moved; putBack.hidden = !moved; };
   const controllers = stickers.map(sticker => {
     sticker.setAttribute('role', 'button');
     sticker.setAttribute('aria-label', `Move the ${sticker.dataset.label} sticker`);
     sticker.setAttribute('aria-describedby', 'sticker-help');
     sticker.tabIndex = 0;
-    return movable(sticker, {stack, limits, onPickup: hold, onChange: sync, onDrop: moved => { lower(); return moved ? clearSpot(sticker) : null; }});
+    const controller = movable(sticker, {stack, limits, onPickup: hold, onChange: sync,
+      onDrop: moved => { const spot = moved ? clearSpot(sticker) : null; lower(spot ? SETTLE : 0); return spot; },
+      onKeyIdle: () => { const spot = clearSpot(sticker); if (spot) { controller.nudge(...spot); status.textContent = 'Moved clear of the words.'; } }});
+    return controller;
   });
-  new ResizeObserver(() => controllers.forEach(c => { if (c.moved()) c.bound(); })).observe(main);
+  let resizing = 0;
+  new ResizeObserver(() => { cancelAnimationFrame(resizing); resizing = requestAnimationFrame(() => controllers.forEach((c, i) => {
+    if (!c.moved()) return;
+    c.bound();
+    const spot = clearSpot(stickers[i]);
+    if (spot) c.nudge(...spot, false);
+  })); }).observe(main);
   hint.hidden = false;
   putBack.addEventListener('click', () => {
     const hadFocus = document.activeElement === putBack;
+    hold();
     controllers.forEach(c => c.reset());
+    lower();
     stack.z = 0; sync();
-    document.querySelector('[data-drag-status]').textContent = 'All three stickers are back in place.';
+    status.textContent = 'All three stickers are back in place.';
     if (hadFocus) stickers[0].focus({preventScroll: true});
   });
 }
@@ -230,9 +286,11 @@ if (photoStage) {
     reset.classList.toggle('is-concealed', !show);
     reset.disabled = !show;
   };
-  const controllers = prints.map(print => movable(print, {handle: print.querySelector('.photo-grip'), stack, limits, enabled: desk, surface: true, onChange: sync}));
-  new ResizeObserver(() => controllers.forEach(c => { if (c.moved()) c.bound(); })).observe(photoStage);
+  const controllers = prints.map(print => { const paper = print.querySelector('.print-paper'); return movable(print, {handle: print.querySelector('.photo-grip'), stack, limits, measure: () => paper.getBoundingClientRect(), enabled: desk, surface: true, onChange: sync}); });
+  // Keep moved prints inside the desk, but never while the desk itself is changing height mid-animation.
   let stageFlight = null;
+  const keepInside = () => controllers.forEach(c => { if (c.moved()) c.bound(); });
+  new ResizeObserver(() => { if (stageFlight?.playState !== 'running') keepInside(); }).observe(photoStage);
   function setMode(mode, animate = true) {
     if (mode === photoStage.dataset.layout && animate) return;
     const before = prints.map(print => print.getBoundingClientRect()), height = photoStage.offsetHeight;
@@ -245,12 +303,13 @@ if (photoStage) {
     });
     hint.textContent = mode !== 'desk' ? 'Select a still to look closer.' : finePointer.matches ? 'Drag a print to arrange it. Click a photo to enlarge it.' : 'Use Move to arrange a print. Tap a photo to enlarge it.';
     sync();
-    if (mode === 'desk') controllers.forEach(c => { if (c.moved()) c.bound(); });
+    stageFlight?.cancel();
+    if (mode === 'desk') keepInside();
     if (!animate || !animated()) return;
     // FLIP: each print starts where it was on screen and travels to its new place, together with the paper's turn.
     const after = prints.map(print => print.getBoundingClientRect());
-    stageFlight?.cancel();
     stageFlight = photoStage.animate({height: [`${height}px`, `${photoStage.offsetHeight}px`]}, {duration: LAYOUT, easing: EASE});
+    stageFlight.finished.then(() => { if (desk()) keepInside(); }, () => {});
     prints.forEach((print, i) => {
       const transform = getComputedStyle(print).transform, base = transform === 'none' ? '' : transform;
       controllers[i].fly([
@@ -268,27 +327,37 @@ if (photoStage) {
   const dialog = document.querySelector('.photo-dialog');
   if (dialog && typeof dialog.showModal === 'function') {
     const links = [...document.querySelectorAll('[data-photo]')];
-    const display = dialog.querySelector('[data-dialog-image]');
+    const frame = dialog.querySelector('[data-dialog-frame]');
     const caption = dialog.querySelector('[data-photo-caption]'), count = dialog.querySelector('[data-photo-count]'), live = dialog.querySelector('[data-photo-status]');
     const filmTitle = dialog.dataset.filmTitle.toUpperCase();
-    const large = new Map();
-    const load = i => {
-      const url = links[i].href;
-      if (!large.has(url)) { const img = new Image(); img.src = url; large.set(url, img.decode().then(() => img, () => img)); }
-      return large.get(url);
+    const warmed = new Set();
+    const warm = url => { if (!warmed.has(url)) { warmed.add(url); new Image().src = url; } };
+    let index = 0, current = {i: -1, large: false}, opener, backdropDown = false, swipe = null, speaking = 0;
+    // A picture replaces the one on screen only once it is decoded, so the frame is never blank;
+    // until then the previous picture dims, so it is never mistaken for the new caption.
+    const put = (url, i, large) => {
+      const img = new Image();
+      img.width = 1600; img.height = 900; img.alt = ''; img.src = url;
+      return img.decode().catch(() => {}).then(() => {
+        if (index !== i || !img.naturalWidth || (current.i === i && current.large && !large)) return;
+        img.alt = links[i].querySelector('img').alt;
+        frame.replaceChildren(img);
+        frame.classList.remove('is-stale');
+        current = {i, large};
+      });
     };
-    let index = 0, opener, backdropDown = false, swipe = null;
-    // Show the still already on the page at once, then swap in the large file once it is decoded.
     const show = (next, speak = true) => {
       const i = index = (next + links.length) % links.length;
-      const thumb = links[i].querySelector('img'), ready = thumb.complete && thumb.naturalWidth > 0;
-      if (ready) display.src = thumb.currentSrc || thumb.src; else display.removeAttribute('src');
-      display.classList.toggle('is-loading', !ready);
-      display.alt = caption.textContent = thumb.alt;
+      const thumb = links[i].querySelector('img');
+      frame.classList.toggle('is-stale', current.i !== i);
+      caption.textContent = thumb.alt;
       count.textContent = `${String(i + 1).padStart(2, '0')} / ${String(links.length).padStart(2, '0')} — ${filmTitle}`;
-      if (speak) live.textContent = `Still ${i + 1} of ${links.length}. ${thumb.alt}`;
-      load(i).then(img => { if (index === i && img.naturalWidth) { display.src = img.src; display.classList.remove('is-loading'); } });
-      [i + 1, i - 1].forEach(n => load((n + links.length) % links.length));
+      clearTimeout(speaking);
+      speaking = setTimeout(() => { live.textContent = `Still ${i + 1} of ${links.length}. ${thumb.alt}`; }, speak ? 0 : 150);
+      // The still already on the page goes up first; the large file follows, then the neighbours are warmed.
+      if (thumb.complete && thumb.naturalWidth) put(thumb.currentSrc || thumb.src, i, false);
+      else { thumb.loading = 'eager'; thumb.addEventListener('load', () => put(thumb.currentSrc || thumb.src, i, false), {once: true}); }
+      put(links[i].href, i, true).then(() => [i + 1, i - 1].forEach(n => warm(links[(n + links.length) % links.length].href)));
     };
     links.forEach((link, i) => link.addEventListener('click', event => {
       if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
@@ -302,9 +371,9 @@ if (photoStage) {
       if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') { event.preventDefault(); show(index + (event.key === 'ArrowRight' ? 1 : -1)); }
     });
     // A sideways swipe on a touch screen moves between stills; vertical swipes still scroll.
-    display.addEventListener('pointerdown', event => { swipe = event.pointerType === 'touch' ? [event.clientX, event.clientY] : null; });
-    display.addEventListener('pointercancel', () => { swipe = null; });
-    display.addEventListener('pointerup', event => {
+    frame.addEventListener('pointerdown', event => { swipe = event.pointerType === 'touch' ? [event.clientX, event.clientY] : null; });
+    frame.addEventListener('pointercancel', () => { swipe = null; });
+    frame.addEventListener('pointerup', event => {
       if (!swipe) return;
       const dx = event.clientX - swipe[0], dy = event.clientY - swipe[1];
       swipe = null;
@@ -314,9 +383,10 @@ if (photoStage) {
       const b = dialog.getBoundingClientRect();
       return event.target === dialog && (event.clientX < b.left || event.clientX > b.right || event.clientY < b.top || event.clientY > b.bottom);
     };
+    // Close on the click itself (not on pointer release), so a tap outside never lands on the page underneath.
     dialog.addEventListener('pointerdown', event => { backdropDown = isBackdrop(event); });
-    dialog.addEventListener('pointerup', event => { if (backdropDown && isBackdrop(event)) dialog.close(); backdropDown = false; });
-    dialog.addEventListener('close', () => { root.style.overflow = ''; live.textContent = ''; opener?.focus({preventScroll: true}); });
+    dialog.addEventListener('click', event => { if (backdropDown && isBackdrop(event)) dialog.close(); backdropDown = false; });
+    dialog.addEventListener('close', () => { root.style.overflow = ''; clearTimeout(speaking); live.textContent = ''; opener?.focus({preventScroll: true}); });
   }
 }
 
@@ -334,7 +404,7 @@ if (copy && navigator.clipboard && window.isSecureContext) {
       const range = document.createRange();
       range.selectNodeContents(document.querySelector('.contact-email .magnetic-inner'));
       getSelection().removeAllRanges(); getSelection().addRange(range);
-      copy.textContent = 'Selected. Press Ctrl or ⌘ and C to copy'; status.textContent = 'Email address selected.';
+      copy.textContent = finePointer.matches ? 'Selected. Press Ctrl or ⌘ and C to copy' : 'Selected. Choose Copy to finish'; status.textContent = 'Email address selected.';
     }
     clearTimeout(restore);
     restore = setTimeout(() => { copy.textContent = label; }, 2400);
