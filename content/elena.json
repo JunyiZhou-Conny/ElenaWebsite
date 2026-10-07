@@ -1,0 +1,86 @@
+{
+  "brand": "LeLe Films",
+  "intro": "is an NYC-based production company",
+  "founderLine": "founded by filmmaker Elena Lecun Xiang.",
+  "contact": {
+    "intro": "For inquiries or to request a pitch deck, please contact:",
+    "email": "lelefilmsllc@gmail.com",
+    "instagram": "https://www.instagram.com/lelefilmsllc/",
+    "instagramLabel": "@lelefilmsllc"
+  },
+  "film": {
+    "slug": "goodbye-yiwu",
+    "title": "Goodbye, Yiwu",
+    "titleNote": "Working Title",
+    "detailTitle": "Goodbye, Yiwu (wt)",
+    "chineseTitle": "再见，义乌",
+    "director": "Directed by Elena Lecun Xiang",
+    "format": "Feature-Length Documentary",
+    "production": "U.S./China Production",
+    "cover": {
+      "image": "yiwu-cover",
+      "alt": "Two girls hold hands as they walk through a market aisle lined with artificial greenery."
+    },
+    "logline": "After 18 years apart from her mother, Lecun returns to Yiwu, her childhood wonderland and the world’s largest market, to capture a panorama of women’s lives behind global trade. As she uncovers the hidden sacrifices of motherhood, she must also confront the truth behind her own left-behind childhood.",
+    "support": [
+      {
+        "name": "2026-27 Firelight Documentary Lab"
+      },
+      {
+        "name": "2026 CNEX Chinese Doc Forum 17 | IFG 6",
+        "award": "Winner of AIDC Award and IFG Best Potential on Impact Making First Prize"
+      },
+      {
+        "name": "2026 FIRST International Film Festival Documentary Lab",
+        "translation": "西宁FIRST青年电影节 纪录片实验室"
+      },
+      {
+        "name": "2026 A-Doc Allies Program"
+      },
+      {
+        "name": "2026 Fusion Film Festival Docs in the Works",
+        "award": "Winner of Best Pitch Award"
+      }
+    ],
+    "stills": [
+      {
+        "image": "yiwu-shop",
+        "alt": "A customer and shopkeepers among shelves of household goods in Yiwu."
+      },
+      {
+        "image": "yiwu-dolls",
+        "alt": "A merchant sits among pink boxes of dolls in a wholesale toy stall."
+      },
+      {
+        "image": "yiwu-mother",
+        "alt": "A woman holds a child beside another woman at a market stall."
+      },
+      {
+        "image": "yiwu-port",
+        "alt": "Red gantry cranes rise above stacked shipping containers at a port."
+      }
+    ],
+    "press": [
+      {
+        "label": "AIDC · Pitch prizes at APAC documentary forums",
+        "url": "https://www.aidc.com.au/aidc-presents-pitch-prizes-at-apac-documentary-forums-docs-by-the-sea-dmz-docs-industry-and-ccdf/"
+      },
+      {
+        "label": "CNEX · CCDF17 awards",
+        "url": "https://ccdf.cnexdoc.com/zh-tw/news/5891/"
+      },
+      {
+        "label": "FIRST · 10th Documentary Lab selected projects",
+        "url": "https://www.firstfilm.org.cn/production-cultivation/documentary-lab/select-projects/10thedition/"
+      },
+      {
+        "label": "Project coverage · Canva",
+        "url": "https://www.canva.com/design/DAHJrZd2UlY/Xl4a7Eu-U4Uqu4rIwPyi3A/view"
+      },
+      {
+        "label": "NYU · Fusion Film Festival",
+        "url": "https://wp.nyu.edu/tischschoolofthearts-fusionfilmfestival/"
+      }
+    ]
+  }
+}

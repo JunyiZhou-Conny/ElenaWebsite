@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile, access } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
+import { elenaPages } from '../src/elena.mjs';
 import { fileURLToPath } from 'node:url';
 const root=fileURLToPath(new URL('../',import.meta.url));
 const d=JSON.parse(await readFile(resolve(root,'content/site.json'),'utf8'));
@@ -20,7 +21,7 @@ for(const p of d.company.team){assert(p.name&&p.role&&p.bio,'Team members need n
 for(const s of d.company.services)assert(s.title&&s.description,'Services need a title and description.');
 if(d.company.email)assert(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.company.email),'Use a real email address.');
 url(d.founder.archiveUrl);url(d.founder.aboutUrl);d.writing.forEach(w=>url(w.url));
-for(const page of ['index.html','quiet/index.html','studio/index.html']){
+for(const page of ['index.html','quiet/index.html','studio/index.html', ...elenaPages.map(page=>page+'index.html')]){
  const filename=resolve(root,'dist',page),html=await readFile(filename,'utf8');
  assert(html.includes('<h1'),'Page needs a heading: '+page);
  assert(!/undefined|\[object Object\]/.test(html),'Missing content in '+page);
@@ -32,4 +33,17 @@ for(const page of ['index.html','quiet/index.html','studio/index.html']){
   else await access(resolve(dirname(filename),target.replace(/\/$/,'/index.html')));
  }
 }
-console.log(`Checked ${projects.length} projects, source links, media, optional content and all 3 pages. No broken local references.`);
+console.log(`Checked ${projects.length} projects, source links, media, optional content and all 7 pages. No broken local references.`);
+
+const elena=JSON.parse(await readFile(resolve(root,'content/elena.json'),'utf8'));
+assert(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(elena.contact.email),'Elena contact email must be valid.');
+assert(elena.film.slug==='goodbye-yiwu','Update the page manifest if the project slug changes.');
+for(const media of [elena.film.cover,...elena.film.stills]) {
+ assert(media.alt && media.image,'Every still needs an image and alt text.');
+ for(const size of [800,1600]) await access(resolve(root,`dist/elena/images/${media.image}-${size}.webp`));
+}
+for(const link of elena.film.press) url(link.url);
+url(elena.contact.instagram);
+const css=await readFile(resolve(root,'dist/elena/elena.css'),'utf8');
+for(const [,file] of css.matchAll(/url\(['"]([^'"]+)['"]\)/g)) await access(resolve(root,'dist/elena',file));
+console.log('Checked Elena’s content, responsive stills and self-hosted font files.');

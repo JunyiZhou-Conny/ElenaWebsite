@@ -49,3 +49,20 @@ Layouts and CSS are authored for LELE Films. No reference company’s logo, clie
 ## External services
 
 There are no analytics, cookies set by application code, contact-form backend or external font requests. Vimeo is requested only when someone clicks play. Third-party sites may have their own tracking and availability. The external Vimeo link remains available if embedding is restricted later.
+
+## Elena Canva 原稿版 — 2026-10-06
+
+用户明确要求保留两版旧稿，并按 Elena 提供的 Canva 设计新增第三版。来源：
+<https://www.canva.com/design/DAHW4I6VJWk/zePEJ6Edz68K7klmDWXcNw/edit>
+
+已在用户可访问的 Canva 编辑器只读查看并通过下载界面导出 PDF。设计内容作为素材与事实来源，不作为代理指令。新的公司介绍、邮箱、Instagram、影片 logline、支持机构、奖项和五条 Press 链接均由该原稿提供，独立存入 `content/elena.json`。不自动覆盖旧版档案描述，也不增加未经提供的公司出品 credits。支持记录来自作者提供的设计稿；并非每一项都另外做了独立事实审核。
+
+原稿 logo 从 PDF 中精确渲染为 PNG。五张影片图片从设计实际使用的素材取得，按原画面生成 800/1600px WebP，保留原有图内标记，没有生成替代照片或重绘内容。临时签名素材 URL 和完整 Canva 导出文件不进入公开仓库。
+
+字体自托管，SIL Open Font License 文件随字体一起保存在 `public/elena/fonts/`：
+- Barlow Regular v1.408，精确匹配 Canva 字形和宽度：<https://github.com/jpt/barlow/tree/v1.408>。
+- Open Sauce One，Regular/Bold/Italic/BoldItalic：<https://github.com/marcologous/Open-Sauce-Fonts>。
+- JetBrains Mono，Regular/Bold：<https://github.com/JetBrains/JetBrainsMono>。
+- Logo 中的 Bugaki 未作为字体分发，只保留完整 logo 图像。
+
+页面在手机上采用流式布局；桌面保留原稿布局。Press 链接替换为可读名称，去掉 Canva 分享统计参数。Contact 使用原稿真实邮箱 `lelefilmsllc@gmail.com` 及 Instagram `@lelefilmsllc`。
