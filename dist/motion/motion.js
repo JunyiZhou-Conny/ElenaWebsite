@@ -46,6 +46,15 @@ document.querySelectorAll('[data-magnetic]').forEach(anchor => {
   anchor.addEventListener('blur', reset);
 });
 
+// Works: the hover and focus gesture is plain CSS. On a slow connection the still fades in once decoded instead of painting in strips.
+const still = document.querySelector('.project-frame img');
+if (still && !still.complete) {
+  const show = () => still.classList.remove('is-loading');
+  still.classList.add('is-loading');
+  still.addEventListener('load', () => still.decode().then(show, show), {once: true});
+  still.addEventListener('error', show, {once: true});
+}
+
 // Dragging. A held object follows the pointer exactly; easing is only for objects nobody is holding.
 // `handle` always picks the object up. With `surface`, a mouse or pen can also pick it up anywhere,
 // while touch keeps to the handle so a swipe over a photo still scrolls the page.
