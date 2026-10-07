@@ -1,15 +1,17 @@
 # LELE Films
 
-给 Elena 的电影公司网站起点。三种独立设计，其中第三版忠实实现 Elena 提供的 Canva 稿；不需要付费框架、数据库或复杂后台。
+给 Elena 的电影公司网站起点。四种独立设计，其中第三版忠实实现 Elena 提供的 Canva 稿；不需要付费框架、数据库或复杂后台。
 
 | 版本 | 打开地址 | 设计方向 |
 | --- | --- | --- |
 | 01 · Quiet Cinema | `/quiet/` | Tail Bite Tail 的电影档案感 + Oui 的留白：暖黑底、衬线字体、双语导航、剧照 |
 | 02 · The Studio | `/studio/` | Denizen 的黑白开场、粗体文字、通栏作品和亮蓝色区块 |
 | 03 · Elena’s Design | `/elena/` | Elena 的 Canva 原稿：白底、橙蓝 logo、四个独立页面 |
-| 比较入口 | `/` | 三个方向的入口 |
+| 04 · LeLe in Motion | `/motion/` | 保留 Elena 的品牌与文案，加入轻柔磁吸、作品预览、贴纸与可拖动剧照 |
+| 比较入口 | `/` | 四个方向的入口 |
 
 在线预览：
+- https://lele-films-designs.carissa-conny.chatgpt.site/motion/
 - https://lele-films-designs.carissa-conny.chatgpt.site/elena/
 - https://lele-films-designs.carissa-conny.chatgpt.site/quiet/
 - https://lele-films-designs.carissa-conny.chatgpt.site/studio/
@@ -34,7 +36,8 @@ npm run dev
 
 | 文件 | 用途 |
 | --- | --- |
-| `content/elena.json` | 第三版的公司介绍、真实邮箱、影片文案、支持机构、剧照和报道链接 |
+| `content/elena.json` | 第三、四版的公司介绍、真实邮箱、影片文案、支持机构、剧照和报道链接 |
+| `src/motion.mjs` / `src/motion.css` / `src/motion.js` | 第四版独立结构、样式与互动；维护说明见 `docs/LELE-IN-MOTION.zh-CN.md` |
 | `src/elena.mjs` / `src/elena.css` / `src/elena.js` | 第三版的页面、手机适配和轻量导航 |
 | `public/elena/` | 第三版的原始 logo、压缩后的剧照、自托管字体和许可证 |
 | `content/site.json` | 公司介绍、邮箱、创始人、作品、团队、服务、写作链接 |
@@ -65,7 +68,7 @@ npm run build
 npm run check
 ```
 
-项目输出为普通 HTML/CSS/JS，托管 `dist/` 即可。可以使用 Sites、GitHub Pages、Cloudflare Pages、Netlify 或 Vercel。三个版本使用相对路径，也能部署在 GitHub Pages 的项目子路径下。
+项目输出为普通 HTML/CSS/JS，托管 `dist/` 即可。可以使用 Sites、GitHub Pages、Cloudflare Pages、Netlify 或 Vercel。四个版本使用相对路径，也能部署在 GitHub Pages 的项目子路径下。
 
 当前 Sites 项目标识在 `.openai/hosting.json`，后续让 Codex 更新这个已有 Site，避免每次新建站点。GitHub push 本身不会自动更新 Sites；需要完成 Sites 发布。
 

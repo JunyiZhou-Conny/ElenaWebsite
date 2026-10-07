@@ -2,7 +2,7 @@
   "name": "lele-films",
   "private": true,
   "version": "1.0.0",
-  "description": "Three editable design directions for LELE Films, including Elena\u2019s Canva design",
+  "description": "Four editable design directions for LELE Films, including Elena’s Canva design and LeLe in Motion",
   "type": "module",
   "scripts": {
     "dev": "node scripts/serve.mjs",

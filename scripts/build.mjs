@@ -1,6 +1,7 @@
 import { readFile, writeFile, mkdir, cp } from 'node:fs/promises';
 import { render } from '../src/templates.mjs';
 import { renderElena, elenaPages } from '../src/elena.mjs';
+import { renderMotion, motionPages } from '../src/motion.mjs';
 const content = JSON.parse(await readFile(new URL('../content/site.json', import.meta.url), 'utf8'));
 const root = new URL('../dist/', import.meta.url);
 await mkdir(root, { recursive: true });
@@ -19,4 +20,11 @@ for (const page of elenaPages) {
  await mkdir(folder, {recursive:true});
  await writeFile(new URL('index.html', folder), renderElena(page, elena));
 }
-console.log('Built LELE Films: /quiet/, /studio/, and 4 pages at /elena/');
+await mkdir(new URL('motion/', root), { recursive: true });
+for (const file of ['motion.css','motion.js']) await cp(new URL(`../src/${file}`, import.meta.url), new URL(`motion/${file}`, root));
+for (const page of motionPages) {
+ const folder = new URL(page, root);
+ await mkdir(folder, {recursive:true});
+ await writeFile(new URL('index.html', folder), renderMotion(page, elena));
+}
+console.log('Built LELE Films: /quiet/, /studio/, /elena/, and /motion/');

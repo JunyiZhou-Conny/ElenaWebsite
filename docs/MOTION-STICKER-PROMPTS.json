@@ -1,0 +1,17 @@
+{
+  "mode": "built-in image_gen",
+  "assets": [
+    {
+      "key": "market-greenery",
+      "prompt": "Use case: illustration-story. Asset type: one small interactive website die-cut sticker for an independent documentary about Yiwu, China. Create a single sprig of artificial market greenery, inspired by the dense plastic leaf garlands hanging in Yiwu wholesale market aisles: one gently curved short green branch with about 7 broad dark-green leaves, a few lighter-green highlights, plastic stems visible. Tasteful hand-drawn editorial illustration, slightly imperfect inky outlines, flat restrained color shapes, subtly tactile matte paper and faint colored pencil grain. Natural greens with a tiny cobalt blue #002fa7 tie at the stem. Center the single branch fully visible, generous white die-cut edge tracing the silhouette. Legible and charming at 100 pixels. Output true transparent background outside the white paper sticker, no cast shadow, no scene, no extra props, no other stickers, no border frame, no text, no lettering, no watermark. Square composition; object fills about 78 percent of square."
+    },
+    {
+      "key": "boxed-doll",
+      "prompt": "Use case: illustration-story. Asset type: one small interactive website die-cut sticker for an independent documentary about Yiwu, China. Create a single unbranded toy doll in a pink rectangular toy box with a transparent front window, inspired by the densely stocked pink doll stalls in Yiwu wholesale market. The toy is a stylized nonrealistic doll with dark hair and a simple pale pink dress, tiny simplified face; the box seen at a subtle three-quarter angle, pink and cream front, small orange #ff751f and cobalt blue #002fa7 accent panels. Tasteful hand-drawn editorial illustration, slightly imperfect inky outlines, flat restrained color shapes, subtly tactile matte paper and faint colored pencil grain. Center the one toy package fully visible, generous white die-cut edge tracing the silhouette. Legible and charming at 100 pixels. Output true transparent background outside the white paper sticker, no cast shadow, no scene, no extra props, no other stickers, no border frame, no text, no lettering, no logos, no watermark. Square composition; object fills about 78 percent of square."
+    },
+    {
+      "key": "shipping-container",
+      "prompt": "Use case: illustration-story. Asset type: one small interactive website die-cut sticker for an independent documentary about Yiwu, China. Create a single miniature corrugated shipping container in three-quarter view, inspired by international cargo trade through Chinese ports. The long corrugated side is rich cobalt blue #002fa7, short end door is restrained orange #ff751f, top is a paler blue; simple steel corner details and fine dark-blue door hinges. Tasteful hand-drawn editorial illustration, slightly imperfect inky outlines, flat restrained color shapes, subtly tactile matte paper and faint colored pencil grain. Center the single container fully visible, generous white die-cut edge tracing the silhouette. Legible and charming at 100 pixels. Output true transparent background outside the white paper sticker, no cast shadow, no scene, no crane, no ship, no extra props, no other stickers, no border frame, no text, no lettering, no serial numbers, no logos, no watermark. Square composition; object fills about 78 percent of square."
+    }
+  ]
+}
