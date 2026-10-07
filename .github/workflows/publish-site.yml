@@ -1,0 +1,43 @@
+# Publishes the public website (site/, built from src/ and content/) to GitHub Pages, which serves lelefilms.com.
+# Runs on every change to main, or by hand from the Actions tab. The design preview (dist/) is not published here.
+name: Publish lelefilms.com
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Let a publish that has started finish; a newer change publishes right after it.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Build and check
+        run: npm run build && npm run check
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Upload the public website
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - name: Publish to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

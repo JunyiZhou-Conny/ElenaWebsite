@@ -22,3 +22,19 @@ This validates the website and its local interactions, not third-party video ava
 - A separate code review found tablet CONTACT overflow and missing spacing between inline mobile introduction spans; both fixed and rechecked.
 - Navigation remains ordinary HTML links. Native view transitions last 160–300ms; reduced-motion CSS disables animation. The preview logged native transition cancellations during viewport/navigation inspection; these did not interrupt navigation. No application-script exception was observed. Browsers without native page transitions fall back to normal navigation.
 - No video player or form was added. No custom-domain/DNS changes. All versions retain noindex.
+
+## 2026-10-07 — Edition 04 interaction refinement
+
+Scope: `/motion/` only (`src/motion.*` and the generated `dist/motion/`). Every file outside `dist/motion/` was byte-compared with the previous build and is unchanged, so `/elena/`, `/quiet/`, `/studio/` and the comparison entrance are untouched. `npm run build` and `npm run check` pass.
+
+Method: headless Chromium (Playwright) at about 60Hz with synthetic mouse, keyboard and touch input, per-frame sampling of positions, transforms and opacity, screen recordings and contact sheets. The previous build was kept running beside the new one for side-by-side measurements. Two independent review rounds (six lenses plus a skeptic that reproduced each finding, then a re-verification and a final check) found issues that were fixed before delivery.
+
+- Works: the floating follower was the cause of the reported feel. It trailed the pointer by about 81ms × speed with a 28px offset, so above roughly 345px/s the cursor sat inside the picture; it covered the film title in about 94% of hover frames and pinned at the window edge. Four alternatives were prototyped and measured with one shared script; an enhanced permanent still was chosen. Now: title covered 0%, no image moves with the pointer, hover feedback reaches 90% in about 140ms and rests by about 230ms, the title never moves, clicks at any moment open the film.
+- Grid / Desk: the transition had never played (a 1px border change cancelled it on its first frame). It now plays in both directions (largest per-frame step about 15px, done in about 0.4–0.47s), rapid toggles end in the last-chosen mode, and an arrangement survives switching back and forth without drifting.
+- Page changes: the window after arrival in which clicks were swallowed went from about 320ms to about 220ms (median); the Works still now becomes the film cover as one picture, also when images revalidate slowly.
+- Viewer: opens at its final size (it used to open as a thin strip), never shows an empty frame or a stale picture at full strength, closes on a tap outside without clicking the page beneath, and returns focus.
+- Stickers: pickup, settle and animated put-back; a sticker released on the logo, navigation or text glides clear; keyboard moves, resizes and touch were checked at 320–1440px.
+- Phones and tablets: no horizontal overflow at 300–1440px; touch targets at least 44px; native scrolling over photographs on the Desk; the Move handle drags.
+- Keyboard, reduced motion and no-JS: visible focus throughout; reduced motion removes zoom, travel and page transitions while dragging still works; without JavaScript every page reads and links normally.
+
+Not tested: real touch hardware, real trackpads and mice, 120Hz displays (motion is time-based and was simulated at 30/120Hz), Safari and Firefox (features without support fall back to instant changes), screen-reader speech (the accessibility tree was checked). The site was not republished; the live preview still shows the previous version.
