@@ -10,12 +10,21 @@ const SETTLE = ms('--motion-settle', 320), LAYOUT = ms('--motion-layout', 420);
 const EASE = tokens.getPropertyValue('--ease-out').trim() || 'cubic-bezier(.22,1,.36,1)';
 const animated = () => !reducedMotion.matches;
 const cleanup = new Set();
-let quietEscapeUntil = 0;
+// The Escape that closes the still viewer must not also put back the print that opened it.
+let quietEscape = {target: null, until: 0};
 addEventListener('blur', () => cleanup.forEach(fn => fn()));
 document.addEventListener('visibilitychange', () => { if (document.hidden) cleanup.forEach(fn => fn()); });
 reducedMotion.addEventListener('change', () => { cleanup.forEach(fn => fn()); if (reducedMotion.matches) document.getAnimations().forEach(animation => animation.finish()); });
 // iOS Safari only shows :active pressed states when the page listens for touches.
 document.addEventListener('touchstart', () => {}, {passive: true});
+
+// Page changes: a shared picture or label that is off screen when the page is left would fly in from far away; let it fade with the page instead.
+const shared = '.film-cover, .project-frame, .brand, .nav-works, .nav-contact';
+addEventListener('pageswap', event => {
+  if (!event.viewTransition) return;
+  document.querySelectorAll(shared).forEach(el => { const box = el.getBoundingClientRect(); if (box.bottom < 0 || box.top > innerHeight) el.style.viewTransitionName = 'none'; });
+});
+addEventListener('pageshow', () => document.querySelectorAll(shared).forEach(el => { el.style.viewTransitionName = ''; }));
 
 // Warm a page while the visitor points at its link, so it is ready when they click.
 if (!navigator.connection?.saveData && !/2g/.test(navigator.connection?.effectiveType || '')) {
@@ -107,7 +116,7 @@ function movable(element, {handle = element, stack, limits, measure = () => elem
     if (!enabled() || event.button !== 0 || !event.isPrimary) return;
     const onHandle = handle.contains(event.target);
     if (!onHandle && !(surface && event.pointerType !== 'touch')) return;
-    raise(); keyed = false;
+    raise();
     clearTimeout(settling); element.classList.remove('is-settling');
     drag = {id: event.pointerId, startX: event.clientX, startY: event.clientY, lastX: event.clientX, lastY: event.clientY, x, y, slipX: 0, slipY: 0, moved: false, touch: event.pointerType === 'touch', threshold: event.pointerType === 'touch' ? 10 : 6};
     element.classList.add('is-held');
@@ -129,7 +138,7 @@ function movable(element, {handle = element, stack, limits, measure = () => elem
     drag.lastX = event.clientX; drag.lastY = event.clientY;
     if (!drag.moved) {
       if (Math.hypot(dx, dy) < drag.threshold) return;
-      drag.moved = true;
+      drag.moved = true; keyed = false;
       element.classList.add('is-dragging');
       if (!element.hasPointerCapture(drag.id)) element.setPointerCapture(drag.id);
       // Only a real drag interrupts a glide; a press on a moving object lets it finish.
@@ -174,7 +183,8 @@ function movable(element, {handle = element, stack, limits, measure = () => elem
   // Escape works wherever focus sits inside the object, including a photo just dragged with the mouse,
   // but not the Escape that just closed the viewer, nor a held-down key.
   element.addEventListener('keydown', event => {
-    if (event.key !== 'Escape' || event.repeat || performance.now() < quietEscapeUntil || !enabled() || !(x || y)) return;
+    if (event.key !== 'Escape' || event.repeat || !enabled() || !(x || y)) return;
+    if (event.target === quietEscape.target && performance.now() < quietEscape.until) return;
     event.preventDefault(); reset(); announce('Put back.'); onChange?.();
   });
   handle.addEventListener('keydown', event => {
@@ -221,21 +231,32 @@ if (stickerStage) {
     ...[...main.querySelectorAll('.company-intro, .home-note')].flatMap(textRects)
   ].filter(r => r.width && r.height).map(r => grow(r, 6));
   const overlap = (a, b) => Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left)) * Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
-  // The drawn object fills roughly the middle 70% of each square sticker image.
-  const artwork = sticker => { const box = sticker.getBoundingClientRect(), size = sticker.offsetWidth * .7; return new DOMRect(box.left + box.width / 2 - size / 2, box.top + box.height / 2 - size / 2, size, size); };
+  // Where each drawing actually sits inside its square image (left, top, right, bottom as fractions; data-art in motion.mjs),
+  // turned by the sticker's angle.
+  const artwork = sticker => {
+    const box = sticker.getBoundingClientRect(), size = sticker.offsetWidth, [l, t, r, b] = sticker.dataset.art.split(' ').map(Number);
+    const turn = parseFloat(getComputedStyle(sticker).getPropertyValue('--angle')) * Math.PI / 180, cos = Math.cos(turn), sin = Math.sin(turn);
+    const corners = [[l, t], [r, t], [r, b], [l, b]].map(([fx, fy]) => { const dx = (fx - .5) * size, dy = (fy - .5) * size; return [dx * cos - dy * sin, dx * sin + dy * cos]; });
+    const xs = corners.map(c => c[0]), ys = corners.map(c => c[1]), cx = box.left + box.width / 2, cy = box.top + box.height / 2;
+    return new DOMRect(cx + Math.min(...xs), cy + Math.min(...ys), Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys));
+  };
   // Search outward for the nearest spot that keeps the words (and the caption that appears under a sticker) clear,
   // preferring not to touch the other stickers either.
+  // Search outward for the nearest spot that keeps the words (and the caption that appears under a sticker) clear,
+  // preferring a spot on the visible screen and not touching the other stickers.
   const clearSpot = sticker => {
-    const art = artwork(sticker), area = art.width * art.height, words = zones(), page = limits(), tail = sticker.offsetWidth * .15 + 20;
+    const art = artwork(sticker), area = art.width * art.height, words = zones(), page = limits(), box = sticker.getBoundingClientRect();
+    const tail = box.bottom - art.bottom + 20, screen = {...page, top: Math.max(page.top, 0), bottom: Math.min(page.bottom, innerHeight)};
     const others = stickers.filter(other => other !== sticker).map(artwork);
-    const blocked = (dx, dy, [wordShare, stickerShare]) => {
+    const blocked = (dx, dy, [area1, wordShare, stickerShare]) => {
       const r = new DOMRect(art.x + dx, art.y + dy, art.width, art.height), withCaption = new DOMRect(r.x, r.y, r.width, r.height + tail);
-      return r.left < page.left || r.right > page.right || r.top < page.top || r.bottom > page.bottom
+      return r.left < area1.left || r.right > area1.right || r.top < area1.top || r.bottom > area1.bottom
         || words.some(zone => overlap(withCaption, zone) > area * wordShare) || others.some(other => overlap(r, other) > area * stickerShare);
     };
-    if (!blocked(0, 0, [0, .15])) return null;
-    for (const allowance of [[0, 0], [0, .15], [.01, .15]]) for (let distance = 8; distance < 900; distance += 8) for (let step = 0; step < 24; step++) {
-      const angle = step / 24 * Math.PI * 2, dx = Math.cos(angle) * distance, dy = Math.sin(angle) * distance;
+    if (!blocked(0, 0, [page, 0, .15])) return null;
+    for (const allowance of [[screen, 0, 0], [screen, 0, .15], [page, 0, .15], [page, .01, .15]]) for (let distance = 8; distance < 900; distance += 8) for (let step = 0; step < 24; step++) {
+      // Alternate around the circle (right, left, down, up, ...) so no direction is favoured.
+      const angle = (step % 2 ? Math.PI : 0) + Math.floor(step / 2) / 24 * Math.PI * 2, dx = Math.cos(angle) * distance, dy = Math.sin(angle) * distance;
       if (!blocked(dx, dy, allowance)) return [dx, dy];
     }
     return null;
@@ -243,7 +264,7 @@ if (stickerStage) {
   // While held or gliding, stickers travel above the navigation; at rest they sit below it.
   let lowering = 0;
   const hold = () => { clearTimeout(lowering); stickerStage.classList.add('is-holding'); };
-  const lower = (delay = SETTLE) => { clearTimeout(lowering); lowering = setTimeout(() => stickerStage.classList.remove('is-holding'), delay); };
+  const lower = (delay = SETTLE) => { clearTimeout(lowering); lowering = setTimeout(() => { if (!stickers.some(s => s.classList.contains('is-held'))) stickerStage.classList.remove('is-holding'); }, delay); };
   const sync = () => { const moved = controllers.some(c => c.moved()); hint.hidden = moved; putBack.hidden = !moved; };
   const controllers = stickers.map(sticker => {
     sticker.setAttribute('role', 'button');
@@ -259,7 +280,8 @@ if (stickerStage) {
   // When the window changes size, moved stickers stay on the page and off the words.
   let resizing = 0;
   addEventListener('resize', () => { cancelAnimationFrame(resizing); resizing = requestAnimationFrame(() => controllers.forEach((c, i) => {
-    if (!c.moved() || c.flying()) return;
+    if (!c.moved()) return;
+    if (c.flying()) c.stop();
     c.bound();
     const spot = clearSpot(stickers[i]);
     if (spot) c.nudge(...spot, false);
@@ -340,7 +362,7 @@ if (photoStage) {
     // Decoded pictures are kept, so a still seen or warmed once comes back instantly.
     const pictures = new Map();
     const picture = url => {
-      if (!pictures.has(url)) { const img = new Image(); img.width = 1600; img.height = 900; img.alt = ''; img.src = url; pictures.set(url, {img, ready: img.decode().then(() => img, () => img)}); }
+      if (!pictures.has(url)) { const img = new Image(); img.width = 1600; img.height = 900; img.alt = ''; img.src = url; pictures.set(url, {img, ready: img.decode().then(() => img, () => { if (!img.naturalWidth) pictures.delete(url); return img; })}); }
       return pictures.get(url);
     };
     let index = 0, current = {i: -1, large: false}, opener, backdropDown = false, swipe = null, speaking = 0;
@@ -398,7 +420,7 @@ if (photoStage) {
     // Close on the click itself (not on pointer release), so a tap outside never lands on the page underneath.
     dialog.addEventListener('pointerdown', event => { backdropDown = isBackdrop(event); });
     dialog.addEventListener('click', event => { if (backdropDown && isBackdrop(event)) dialog.close(); backdropDown = false; });
-    dialog.addEventListener('close', () => { quietEscapeUntil = performance.now() + 500; root.style.overflow = ''; clearTimeout(speaking); live.textContent = ''; opener?.focus({preventScroll: true}); });
+    dialog.addEventListener('close', () => { quietEscape = {target: opener, until: performance.now() + 500}; root.style.overflow = ''; clearTimeout(speaking); live.textContent = ''; opener?.focus({preventScroll: true}); });
   }
 }
 
