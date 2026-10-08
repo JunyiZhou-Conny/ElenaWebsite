@@ -69,3 +69,72 @@ for(const file of ['404.html','robots.txt','sitemap.xml'])await access(resolve(r
 const siteCss=await readFile(resolve(root,'site/elena/elena.css'),'utf8');
 for(const [,file] of siteCss.matchAll(/url\(['"]([^'"]+)['"]\)/g)) await access(resolve(root,'site/elena',file));
 console.log(`Checked the public website: ${sitePages.length} pages for ${siteOrigin}, open to search engines, no design-study links.`);
+
+// Elena's October 8 review applies to Edition 04 in both the design preview and public site.
+// Check rendered output so changes to the shared renderer cannot leave one deployment behind.
+const htmlText = value => value
+ .replace(/<[^>]*>/g,'')
+ .replace(/&(amp|lt|gt|quot|#39|copy|#169);/g,(_,entity)=>({amp:'&',lt:'<',gt:'>',quot:'"','#39':"'",copy:'©','#169':'©'}[entity]))
+ .replace(/\s+/g,' ').trim();
+const attribute = (tag,name) => tag.match(new RegExp(`\\b${name}="([^"]*)"`))?.[1];
+function section(html,id,label){
+ const match=html.match(new RegExp(`<section\\b[^>]*\\baria-labelledby="${id}"[^>]*>([\\s\\S]*?)<\\/section>`));
+ assert(match,`Missing ${id} section in ${label}`);
+ return {markup:match[0],body:match[1],index:match.index};
+}
+assert.equal(elena.film.status,'Work In Progress','Keep the production status separate from the working title.');
+assert.equal(elena.film.stills.length,4,'Elena requested four film stills.');
+for(const [directory,pages] of [['dist',motionPages],['site',sitePages]]){
+ const output=await Promise.all(pages.map(page=>readFile(resolve(root,directory,page,'index.html'),'utf8')));
+ const [home,works,film,contact]=output;
+ const label=`${directory}/${pages[0]}`;
+ for(let i=0;i<output.length;i++){
+  assert(!/\b(?:sticker-stage|data-reset-stickers|data-drag(?:-status)?|data-mode|data-reset-photos|gallery-controls|photo-stage|photo-grip|photo-open|photo-dialog|contact-mark)\b|<dialog\b/.test(output[i]),`Retired interactive markup remains in ${directory}/${pages[i]}`);
+ }
+ assert(/©\s*(?:\d{4}\s*)?LeLe\s+Films/i.test(htmlText(home)),`Home needs the LeLe Films copyright in ${label}`);
+
+ const projectHeading=works.match(/<h2\b[^>]*>([\s\S]*?)<\/h2>/)?.[1];
+ assert(projectHeading,`Works needs a project heading in ${label}`);
+ const workingTitle=projectHeading.match(/<span\b[^>]*class="[^"]*\bproject-working-title\b[^"]*"[^>]*>([\s\S]*?)<\/span>/)?.[1];
+ const chineseTitle=projectHeading.match(/<span\b[^>]*class="[^"]*\bproject-chinese\b[^"]*"[^>]*>([\s\S]*?)<\/span>/)?.[1];
+ assert.equal(htmlText(workingTitle||''),'(working title)',`Works needs the separate working-title note in ${label}`);
+ assert.equal(htmlText(chineseTitle||''),elena.film.chineseTitle,`Works needs the Chinese title in ${label}`);
+ assert(!htmlText(projectHeading).includes(elena.film.status),`Production status must not become part of the title in ${label}`);
+ const worksMeta=works.match(/\bid="works-meta"[^>]*>([\s\S]*?)<\/div>/)?.[1]||'';
+ assert(htmlText(worksMeta).includes(elena.film.status),`Works metadata needs Work In Progress in ${label}`);
+ assert(!/working title/i.test(htmlText(worksMeta)),`Working title must stay with the title, not replace production status in ${label}`);
+
+ const stills=section(film,'stills',label),director=section(film,'director',label),press=section(film,'press',label);
+ assert(stills.index<director.index&&director.index<press.index,`Director must follow Stills and precede Press in ${label}`);
+ const grid=stills.body.match(/<div\b[^>]*class="[^"]*\bstills-grid\b[^"]*"[^>]*>([\s\S]*?)<\/div>/)?.[1];
+ assert(grid,`Stills needs a plain image grid in ${label}`);
+ const stillImages=[...grid.matchAll(/<img\b[^>]*>/g)].map(match=>match[0]);
+ assert.equal(stillImages.length,4,`Stills must display exactly four images in ${label}`);
+ assert.equal(grid.replace(/<img\b[^>]*>/g,'').trim(),'',`Stills must contain plain images without links, captions or controls in ${label}`);
+ assert(!/<(?:a|button|dialog|figcaption)\b|\btabindex\s*=|\brole="(?:button|link)"/.test(stills.body),`Film stills must remain noninteractive in ${label}`);
+ stillImages.forEach((img,i)=>{
+  assert(attribute(img,'src')?.endsWith(`/images/${elena.film.stills[i].image}-800.webp`),`Still ${i+1} is missing or out of order in ${label}`);
+  assert.equal(htmlText(attribute(img,'alt')||''),elena.film.stills[i].alt,`Still ${i+1} needs its descriptive alt text in ${label}`);
+ });
+ assert(/<h2\b[^>]*\bid="director"[^>]*>\s*Director:\s*<\/h2>/.test(director.body),`Director section needs a labelled heading in ${label}`);
+ assert(/class="[^"]*\bdirector-layout\b/.test(director.body),`Director section needs its portrait and biography layout in ${label}`);
+ const portrait=director.body.match(/<img\b[^>]*class="[^"]*\bdirector-portrait\b[^"]*"[^>]*>/)?.[0];
+ assert(portrait&&htmlText(attribute(portrait,'alt')||''),`Director portrait needs meaningful alt text in ${label}`);
+ const biography=director.body.match(/<div\b[^>]*class="[^"]*\bdirector-bio\b[^"]*"[^>]*>([\s\S]*?)<\/div>/)?.[1]||'';
+ const paragraphs=[...biography.matchAll(/<p\b[^>]*>([\s\S]*?)<\/p>/g)];
+ assert(paragraphs.length&&paragraphs.every(match=>htmlText(match[1])),`Director biography needs nonempty paragraphs in ${label}`);
+
+ const pressLinks=[...press.body.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/g)];
+ assert.equal(pressLinks.length,elena.film.press.length,`Keep every supplied press URL in ${label}`);
+ pressLinks.forEach((link,i)=>{
+  const expected=elena.film.press[i].url;
+  assert.equal(htmlText(attribute(link[1],'href')||''),expected,`Press URL ${i+1} changed in ${label}`);
+  const visible=link[2].replace(/<span\b[^>]*class="[^"]*\bsr-only\b[^"]*"[^>]*>[\s\S]*?<\/span>/g,'').replace(/<span\b[^>]*aria-hidden="true"[^>]*>[\s\S]*?<\/span>/g,'');
+  assert.equal(htmlText(visible),expected,`Press label ${i+1} must show its raw URL in ${label}`);
+ });
+ assert(contact.includes(`href="mailto:${elena.contact.email}"`),`Contact needs the real email link in ${label}`);
+ assert(contact.includes(`data-copy="${elena.contact.email}"`),`Contact needs its copy-email control in ${label}`);
+ const copyStatus=contact.match(/<[^>]*\bdata-copy-status\b[^>]*>/)?.[0]||'';
+ assert(/\brole="status"|\baria-live="polite"/.test(copyStatus),`Copy-email feedback must be announced accessibly in ${label}`);
+}
+console.log('Checked Elena’s review: copyright, separate working title/status, four plain stills, director biography, raw press URLs and accessible contact controls.');

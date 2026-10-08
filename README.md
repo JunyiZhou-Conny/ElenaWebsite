@@ -7,16 +7,18 @@
 | 01 · Quiet Cinema | `/quiet/` | Tail Bite Tail 的电影档案感 + Oui 的留白：暖黑底、衬线字体、双语导航、剧照 |
 | 02 · The Studio | `/studio/` | Denizen 的黑白开场、粗体文字、通栏作品和亮蓝色区块 |
 | 03 · Elena’s Design | `/elena/` | Elena 的 Canva 原稿：白底、橙蓝 logo、四个独立页面 |
-| 04 · LeLe in Motion | `/motion/` | 保留 Elena 的品牌与文案，加入轻柔磁吸、剧照为主角的作品行、贴纸与可拖动剧照 |
+| 04 · LeLe in Motion | `/motion/` | 按 Elena 10 月 8 日反馈简化：保留品牌、轻柔导航和作品反馈；静态剧照、导演介绍与简洁联系页 |
 | 比较入口 | `/` | 四个方向的入口 |
 
-在线预览：
+正式网站：<https://junyizhou-conny.github.io/ElenaWebsite/>。
+
+四版设计预览（与正式网站分开发布）：
 - https://lele-films-designs.carissa-conny.chatgpt.site/motion/
 - https://lele-films-designs.carissa-conny.chatgpt.site/elena/
 - https://lele-films-designs.carissa-conny.chatgpt.site/quiet/
 - https://lele-films-designs.carissa-conny.chatgpt.site/studio/
 
-这些地址是设计预览，**不是已绑定的 lelefilms.com**。设计预览默认禁止搜索引擎索引。
+这些 Sites 地址是设计预览，**不是已绑定的 lelefilms.com**，也不会随 GitHub 更新自动重新发布。设计预览默认禁止搜索引擎索引。
 
 正式网站选用第四版：`npm run build` 另外生成 `site/`（第四版放在网站根目录，可被搜索引擎收录，不含设计比较链接），合并到 `main` 后由 GitHub Actions 发布到 GitHub Pages。连接 lelefilms.com 的步骤、Elena 需要提供的信息和 DNS 记录见 `docs/LAUNCH-LELEFILMS.md`。
 
@@ -38,10 +40,11 @@ npm run dev
 
 | 文件 | 用途 |
 | --- | --- |
-| `content/elena.json` | 第三、四版的公司介绍、真实邮箱、影片文案、支持机构、剧照和报道链接 |
+| `content/elena.json` | 第三、四版的公司介绍、真实邮箱、影片文案、支持机构、剧照和报道链接；也保存第四版使用的导演介绍 |
 | `src/motion.mjs` / `src/motion.css` / `src/motion.js` | 第四版独立结构、样式与互动；维护说明见 `docs/LELE-IN-MOTION.zh-CN.md` |
 | `src/elena.mjs` / `src/elena.css` / `src/elena.js` | 第三版的页面、手机适配和轻量导航 |
 | `public/elena/` | 第三版的原始 logo、压缩后的剧照、自托管字体和许可证 |
+| `public/motion/images/` | 第四版导演介绍使用的作者照片 |
 | `content/site.json` | 公司介绍、邮箱、创始人、作品、团队、服务、写作链接 |
 | `public/images/` | 正式显示在网站上的剧照、海报、照片 |
 | `src/templates.mjs` | 两套页面的结构 |
@@ -56,6 +59,9 @@ npm run dev
 
 ## 当前内容与边界
 
+- 第四版与正式网站按 Elena 的 2026-10-08 review 去掉贴纸、照片桌和放大查看器；保留四张不可点击的剧照，在 Stills 与 Press 之间加入导演介绍。Works 单独显示 `(working title)`，状态为 `Work In Progress`，Press 显示原始 URL。联系页恢复 Canva 的正文大小，保留复制邮箱。
+- 新增导演介绍逐字采用 Elena 在 review 中提供的设计截图。里面的经历与奖项是作者提供的内容，未在本次修改中逐项独立核实。导演照片取自同一截图；原始高清照片可在以后替换。
+- 以下个人档案、播放弹窗和空白内容模板说明主要适用于 `/quiet/` 与 `/studio/`；这两版与 `/elena/` 原稿均保留原样。
 - 《Goodbye, Yiwu》（2026，制作中）和《The Acupuncturist》（2025，6 分钟）来自 Elena 的公开个人档案。
 - 这两部片都标为 **Elena’s personal work**。不会自动声称它们由 LELE Films 出品。
 - 《The Acupuncturist》在用户点击播放后才载入 Vimeo；关掉弹窗会停止播放器，并保留外部 Vimeo 链接作为后备。
@@ -72,11 +78,11 @@ npm run build
 npm run check
 ```
 
-项目输出为普通 HTML/CSS/JS，托管 `dist/` 即可。可以使用 Sites、GitHub Pages、Cloudflare Pages、Netlify 或 Vercel。四个版本使用相对路径，也能部署在 GitHub Pages 的项目子路径下。
+项目输出为普通 HTML/CSS/JS。`dist/` 用于四版设计比较；`site/` 用于正式网站。页面使用相对路径，也能部署在 GitHub Pages 的项目子路径下。
 
 当前 Sites 项目标识在 `.openai/hosting.json`，后续让 Codex 更新这个已有 Site，避免每次新建站点。GitHub push 本身不会自动更新 Sites；需要完成 Sites 发布。
 
-正式上线前，先选定一个设计，再把选中的页面设置为 `/`，设置真实邮箱，核对公司介绍与作品授权，关闭对比工具条，最后连接 `lelefilms.com`。具体流程见中文指南。
+正式网站已选用第四版，首页在 `/`，使用真实邮箱，不显示对比工具条。合并到 `main` 会由 GitHub Actions 构建并发布 `site/`；发布后检查工作流和公开页面。自定义域名仍须单独完成 DNS 连接，步骤见 `docs/LAUNCH-LELEFILMS.md`。
 
 ## Elena 原稿版（2026-10-06）
 

@@ -66,3 +66,11 @@ There are no analytics, cookies set by application code, contact-form backend or
 - Logo 中的 Bugaki 未作为字体分发，只保留完整 logo 图像。
 
 页面在手机上采用流式布局；桌面保留原稿布局。Press 链接替换为可读名称，去掉 Canva 分享统计参数。Contact 使用原稿真实邮箱 `lelefilmsllc@gmail.com` 及 Instagram `@lelefilmsllc`。
+
+## Elena review — 2026-10-08
+
+来源：[Elena 的 review](https://docs.google.com/document/d/1-f73wim9Pho_ijqhMiOx4AFP_29Qpg175c1-yrFlYys/edit)。用户明确要求按此反馈修改第四版与正式网站，前三版保留。文档及其设计截图用于确认具体修改与作者提供的素材。
+
+第四版去掉贴纸、照片桌、图片查看器和装饰“乐”字；采用指定版权行、`(working title)` 与 `Work In Progress` 标签、黑色中文片名、无可见说明的静态剧照、原始 Press URL 和 Canva 联系页字号。新增 Director 区块位于 Stills 与 Press 之间；传记逐字转录自文档内的更新版 Canva 截图。传记中的经历、奖项和资助记录为作者提供，未在本次修改中逐项独立核实。
+
+`public/motion/images/elena-director.png` 是从同一作者提供的截图无损提取的 354 × 632px 肖像，没有生成或重绘；以后可替换为原始高清照片。签名素材 URL 与完整 review 截图不放入公开仓库。原有真实剧照继续使用；早期 AI 贴纸及提示词保留作设计来源记录，但不在当前页面显示。
