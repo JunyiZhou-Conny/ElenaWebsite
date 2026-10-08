@@ -4,8 +4,9 @@ export const motionPages = ['motion/', 'motion/works/', 'motion/works/goodbye-yi
 // The public website (lelefilms.com) is the same edition at the root, without the design-study links, and open to search engines.
 export const sitePages = ['', 'works/', 'works/goodbye-yiwu/', 'contact/'];
 export const siteOrigin = 'https://lelefilms.com/';
-export function renderMotion(page, d, {site = false} = {}) {
+export function renderMotion(page, d, {site = false, assetVersion = ''} = {}) {
   const pages = site ? sitePages : motionPages;
+  const version = assetVersion ? `?v=${encodeURIComponent(assetVersion)}` : '';
   const relative = target => { const p = posix.relative(page || '.', target || '.'); return p ? p + (target === '' || target.endsWith('/') ? '/' : '') : './'; };
   const asset = file => relative('elena/' + file);
   const home = page === pages[0], works = page === pages[1], film = page === pages[2], contact = page === pages[3];
@@ -31,5 +32,5 @@ export function renderMotion(page, d, {site = false} = {}) {
   const meta = site
     ? `<title>${esc(home ? d.brand : `${title} — ${d.brand}`)}</title><link rel="canonical" href="${siteOrigin}${page}"><meta property="og:type" content="website"><meta property="og:site_name" content="${esc(d.brand)}"><meta property="og:title" content="${esc(home ? d.brand : `${title} — ${d.brand}`)}"><meta property="og:description" content="${esc(description)}"><meta property="og:url" content="${siteOrigin}${page}"><meta property="og:image" content="${siteOrigin}elena/images/${f.cover.image}-1600.webp"><meta property="og:image:alt" content="${esc(f.cover.alt)}"><meta name="twitter:card" content="summary_large_image">`
     : `<meta name="robots" content="noindex, nofollow"><title>${esc(title)} — LeLe in Motion</title>`;
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#ffffff">${meta}<meta name="description" content="${esc(description)}"><link rel="icon" href="${asset('images/lele-logo.png')}"><link rel="preload" href="${asset('fonts/Barlow-Regular.woff2')}" as="font" type="font/woff2" crossorigin><link rel="preload" href="${asset('fonts/OpenSauceOne-Regular.ttf')}" as="font" type="font/ttf" crossorigin><link rel="stylesheet" href="${asset('elena.css')}"><link rel="stylesheet" href="${relative('motion/motion.css')}"><script src="${relative('motion/motion.js')}" defer></script></head><body class="motion-page page-${home?'home':works?'works':film?'film':'contact'}"><a class="skip-link" href="#main">Skip to content</a>${body}${footer}</body></html>`;
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#ffffff">${meta}<meta name="description" content="${esc(description)}"><link rel="icon" href="${asset('images/lele-logo.png')}"><link rel="preload" href="${asset('fonts/Barlow-Regular.woff2')}" as="font" type="font/woff2" crossorigin><link rel="preload" href="${asset('fonts/OpenSauceOne-Regular.ttf')}" as="font" type="font/ttf" crossorigin><link rel="stylesheet" href="${asset('elena.css')}"><link rel="stylesheet" href="${relative('motion/motion.css')}${version}"><script src="${relative('motion/motion.js')}${version}" defer></script></head><body class="motion-page page-${home?'home':works?'works':film?'film':'contact'}"><a class="skip-link" href="#main">Skip to content</a>${body}${footer}</body></html>`;
 }

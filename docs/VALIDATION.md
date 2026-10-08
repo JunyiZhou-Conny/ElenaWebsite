@@ -51,3 +51,5 @@ Not tested: real touch hardware, real trackpads and mice, 120Hz displays (motion
 - Reduced-motion CSS and no-JavaScript progressive enhancement remain in source; this run did not separately emulate these modes or retest real touch devices, Safari, Firefox, or screen-reader speech. The author's review screenshot supplies the portrait and biography; this is not an external fact-check of biographical claims.
 
 The GitHub Pages workflow publishes `site/` on a merge to `main`. Sites comparison hosting remains a separate deployment. Domain/DNS settings were not changed by this review.
+
+- Live deployment check caught a returning-browser cache problem: new HTML was using cached old motion CSS. The build now adds a content-derived version to the motion CSS/JS URLs, in both preview and public output, so a changed asset has a fresh browser/CDN cache key. Local-reference validation resolves versioned URLs correctly.

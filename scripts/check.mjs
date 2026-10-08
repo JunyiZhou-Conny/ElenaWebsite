@@ -31,7 +31,7 @@ for(const page of ['index.html','quiet/index.html','studio/index.html', ...[...e
  for(const [,target] of html.matchAll(/(?:href|src)="([^"]+)"/g)){
   if(/^(https?:|mailto:|data:)/.test(target))continue;
   if(target.startsWith('#'))assert(ids.includes(target.slice(1)),'Broken anchor '+target+' in '+page);
-  else await access(resolve(dirname(filename),target.replace(/\/$/,'/index.html')));
+  else await access(resolve(dirname(filename),target.split(/[?#]/)[0].replace(/\/$/,'/index.html')));
  }
 }
 console.log(`Checked ${projects.length} projects, source links, media, optional content and all 11 pages. No broken local references.`);
@@ -62,7 +62,7 @@ for(const page of sitePages){
  for(const [,target] of html.matchAll(/(?:href|src)="([^"]+)"/g)){
   if(/^(https?:|mailto:|data:)/.test(target))continue;
   if(target.startsWith('#'))assert(ids.includes(target.slice(1)),'Broken anchor '+target+' in site/'+page);
-  else await access(resolve(dirname(filename),target.replace(/\/$/,'/index.html')));
+  else await access(resolve(dirname(filename),target.split(/[?#]/)[0].replace(/\/$/,'/index.html')));
  }
 }
 for(const file of ['404.html','robots.txt','sitemap.xml'])await access(resolve(root,'site',file));
