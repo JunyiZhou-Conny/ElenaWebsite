@@ -38,3 +38,16 @@ Method: headless Chromium (Playwright) at about 60Hz with synthetic mouse, keybo
 - Keyboard, reduced motion and no-JS: visible focus throughout; reduced motion removes zoom, travel and page transitions while dragging still works; without JavaScript every page reads and links normally.
 
 Not tested: real touch hardware, real trackpads and mice, 120Hz displays (motion is time-based and was simulated at 30/120Hz), Safari and Firefox (features without support fall back to instant changes), screen-reader speech (the accessibility tree was checked). The site was not republished; the live preview still shows the previous version.
+
+
+## 2026-10-08 — Elena review
+
+- `npm run build`, `npm run check`, JavaScript/module syntax checks and `git diff --check` pass. Review assertions cover both the 4-page public output and Edition 04 preview: copyright, separate title/status, four plain stills, Director between Stills and Press, raw press URL labels, retained contact controls and removal of retired interactive markup.
+- Public output served locally and inspected in the Codex in-app Chromium browser. All four pages had no horizontal overflow at CSS widths 300, 390, 768 and 1280px. Desktop/home/Works/contact and mobile Works/bio/press layouts visually inspected.
+- Followed Home → Works → film → Contact. Keyboard Enter on the Works project link opened the film page. Clicking a still left the page unchanged; no viewer or interactive still wrapper remains. Every film-page image, including the portrait, loaded after scrolling.
+- Computed desktop Works title sizes: 79.36px and 39.68px for `(working title)`; Chinese text rgb(17,17,17). Contact intro/email/Instagram compute to 20px on desktop and 17px on narrow screens.
+- Copy email invokes the existing clipboard-write path and displays `Copied` plus the live status `Email address copied.`. The browser session clipboard readback did not mirror the page write, so OS clipboard contents were not independently confirmed in this run. No application errors or warnings were observed.
+- Independent source review found no blocking issues and checked the biography against the supplied screenshot. Original `dist/elena/`, `dist/quiet/`, `dist/studio/`, their sources, and the comparison entrance are unchanged relative to the pre-review build.
+- Reduced-motion CSS and no-JavaScript progressive enhancement remain in source; this run did not separately emulate these modes or retest real touch devices, Safari, Firefox, or screen-reader speech. The author's review screenshot supplies the portrait and biography; this is not an external fact-check of biographical claims.
+
+The GitHub Pages workflow publishes `site/` on a merge to `main`. Sites comparison hosting remains a separate deployment. Domain/DNS settings were not changed by this review.

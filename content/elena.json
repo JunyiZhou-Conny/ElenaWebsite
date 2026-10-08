@@ -81,6 +81,22 @@
         "label": "NYU · Fusion Film Festival",
         "url": "https://wp.nyu.edu/tischschoolofthearts-fusionfilmfestival/"
       }
-    ]
-  }
+    ],
+    "status": "Work In Progress",
+    "directorBio": {
+      "name": "Elena Lecun Xiang",
+      "intro": "is a documentary filmmaker/editor based in New York City. Her work offers sensitive, emotionally resonant explorations of topics such as gender and immigration.",
+      "paragraphs": [
+        "Her debut short, The Acupuncturist (2025), published by amNewYork, follows a Chinese acupuncturist advocating for immigrant healthcare and insurance reform in New York. Her feature in development, Goodbye, Yiwu (working title) has won the AIDC Award and IFG Best Potential on Impact Making First Prize at the 2026 CNEX Chinese Doc Forum, and Best Pitch at the 2026 Fusion Film Festival. It was also selected for the 2026 FIRST Documentary Lab and A-Doc Allies Program.",
+        "A graduate of NYU’s News & Documentary program, Elena has received recognition and support from the Video Consortium × Sony University Initiative Camera Contest, Asian American Journalism Association’s Jeannie Park Grant, and various grants from New York University."
+      ],
+      "portrait": {
+        "image": "motion/images/elena-director.png",
+        "alt": "Portrait of Elena Lecun Xiang in a blue dress, leaning on a stone wall.",
+        "width": 354,
+        "height": 632
+      }
+    }
+  },
+  "copyright": "© 2026 LeLe Films LLC. All rights reserved."
 }
