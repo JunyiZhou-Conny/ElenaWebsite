@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { readFile, writeFile, mkdir, cp, rm } from 'node:fs/promises';
 import { render } from '../src/templates.mjs';
 import { renderElena, elenaPages } from '../src/elena.mjs';
@@ -13,6 +14,9 @@ for (const theme of ['quiet','studio','compare']) {
  await writeFile(new URL('index.html',folder),render(theme,content));
 }
 await writeFile(new URL('404.html',root),'<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Page not found — LELE Films</title><body style="background:#161412;color:#eee;font:20px Arial;padding:10vw"><h1>This frame is missing.</h1><p><a style="color:inherit" href="/">Return to LELE Films</a></p></body></html>');
+// A new URL when either motion asset changes prevents returning visitors seeing stale CSS/JS.
+const motionAssets = await Promise.all(['motion.css','motion.js'].map(file => readFile(new URL(`../src/${file}`, import.meta.url))));
+const assetVersion = createHash('sha256').update(Buffer.concat(motionAssets)).digest('hex').slice(0,12);
 const elena = JSON.parse(await readFile(new URL('../content/elena.json', import.meta.url), 'utf8'));
 for (const file of ['elena.css', 'elena.js']) await cp(new URL(`../src/${file}`, import.meta.url), new URL(`elena/${file}`, root));
 for (const page of elenaPages) {
@@ -25,7 +29,7 @@ for (const file of ['motion.css','motion.js']) await cp(new URL(`../src/${file}`
 for (const page of motionPages) {
  const folder = new URL(page, root);
  await mkdir(folder, {recursive:true});
- await writeFile(new URL('index.html', folder), renderMotion(page, elena));
+ await writeFile(new URL('index.html', folder), renderMotion(page, elena, {assetVersion}));
 }
 // site/ is the public website for lelefilms.com: Edition 04 at the root, its media and fonts, nothing from the design studies.
 const site = new URL('../site/', import.meta.url);
@@ -38,7 +42,7 @@ for (const file of ['motion.css','motion.js']) await cp(new URL(`../src/${file}`
 for (const page of sitePages) {
  const folder = new URL(page || './', site);
  await mkdir(folder, {recursive:true});
- await writeFile(new URL('index.html', folder), renderMotion(page, elena, {site:true}));
+ await writeFile(new URL('index.html', folder), renderMotion(page, elena, {site:true, assetVersion}));
 }
 await writeFile(new URL('404.html', site), `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>Page not found — ${elena.brand}</title></head><body style="margin:0;min-height:100svh;display:grid;place-items:center;font:20px/1.4 Arial,sans-serif;color:#111;background:#fff;text-align:center"><main><p>This page isn’t here.</p><p><a href="/" style="color:#002fa7">${elena.brand} →</a></p></main></body></html>`);
 await writeFile(new URL('robots.txt', site), `User-agent: *\nAllow: /\n\nSitemap: ${siteOrigin}sitemap.xml\n`);
