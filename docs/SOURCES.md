@@ -74,3 +74,7 @@ There are no analytics, cookies set by application code, contact-form backend or
 第四版去掉贴纸、照片桌、图片查看器和装饰“乐”字；采用指定版权行、`(working title)` 与 `Work In Progress` 标签、黑色中文片名、无可见说明的静态剧照、原始 Press URL 和 Canva 联系页字号。新增 Director 区块位于 Stills 与 Press 之间；传记逐字转录自文档内的更新版 Canva 截图。传记中的经历、奖项和资助记录为作者提供，未在本次修改中逐项独立核实。
 
 `public/motion/images/elena-director.png` 是从同一作者提供的截图无损提取的 354 × 632px 肖像，没有生成或重绘；以后可替换为原始高清照片。签名素材 URL 与完整 review 截图不放入公开仓库。原有真实剧照继续使用；早期 AI 贴纸及提示词保留作设计来源记录，但不在当前页面显示。
+
+## Elena 修改 — 2026-10-10
+
+Elena 要求从影片页 “Supported By” 列表删除 “2026-27 Firelight Documentary Lab”，其余条目保持不变。已从 `content/elena.json` 删除该项；`/elena/`、`/motion/` 和正式网站共用这份内容，因此三处同步删除。
